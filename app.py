@@ -4,14 +4,17 @@ import logging
 from google.cloud import speech_v1p1beta1 as speech
 import pyaudio
 import queue
+import os
+from flask_cors import CORS
 # Create Flask app with static folder configuration
 app = Flask(__name__, static_folder='public')
-from flask_cors import CORS
 
 CORS(app, resources={r"/chat": {"origins": "https://baymax-11.netlify.app"}})
 # Configure Google Generative AI API
-genai.configure(api_key="AIzaSyDJNleTEiqY2tJRddmskckRm6XG3YuACBk")
-
+api_key = os.environ.get('GENAI_API_KEY')
+if not api_key:
+    raise ValueError('No API key provided for Google Generative AI API')
+genai.configure(api_key=api_key)
 # Set generation configuration for the model
 generation_config = {
     "temperature": 1,
