@@ -1,1 +1,22 @@
 node_modules
+# Ignore all .env files
+.env
+
+# Ignore specific files
+config.json
+secrets.json
+
+# Ignore directories
+node_modules/
+dist/
+
+# Ignore log files
+*.log
+
+# Ignore Python compiled files
+__pycache__/
+*.py[cod]
+
+# Ignore IDE files
+.vscode/
+.idea/
