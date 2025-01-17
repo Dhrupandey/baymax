@@ -6,15 +6,22 @@ import pyaudio
 import queue
 import os
 from flask_cors import CORS
+import dotenv
+from dotenv import load_dotenv
+load_dotenv()
 # Create Flask app with static folder configuration
 app = Flask(__name__, static_folder='public')
 
 CORS(app, resources={r"/chat": {"origins": "https://baymax-11.netlify.app"}})
+
 # Configure Google Generative AI API
-api_key = os.environ.get('GENAI_API_KEY')
+api_key = os.getenv('GENAI_API_KEY')
+google_credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 if not api_key:
     raise ValueError('No API key provided for Google Generative AI API')
 genai.configure(api_key=api_key)
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = google_credentials_path
+
 # Set generation configuration for the model
 generation_config = {
     "temperature": 1,
