@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify, render_template, send_from_directory
 import google.generativeai as genai
 import logging
+from google.cloud import speech_v1p1beta1 as speech
+import pyaudio
+import queue
 # Create Flask app with static folder configuration
 app = Flask(__name__, static_folder='public')
 from flask_cors import CORS
@@ -78,6 +81,66 @@ Offer Resources When Appropriate: Gently suggest external resources (such as hot
 
 # Start the chat session
 chat_session = model.start_chat(history=[])
+
+def create_streaming_config():
+    return speech.StreamingRecognitionConfig(
+        config=speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+            sample_rate_hertz=16000,
+            language_code="en-US",
+        ),
+        interim_results=True,
+    )
+
+def get_streaming_response(audio_generator):
+    client = speech.SpeechClient()
+    requests = (
+        speech.StreamingRecognizeRequest(audio_content=content) for content in audio_generator
+    )
+    responses = client.streaming_recognize(config=create_streaming_config(), requests=requests)
+    return responses
+
+def audio_generator(buffer, chunk_size):
+    while True:
+        chunk = buffer.get()
+        if chunk is None:
+            return
+        yield chunk
+
+def record_and_transcribe():
+    chunk_size = 1024
+    buffer = queue.Queue()
+    stream_closed = False
+
+    def callback(in_data, frame_count, time_info, status_flags):
+        buffer.put(in_data)
+        return None, pyaudio.paContinue
+
+    audio_interface = pyaudio.PyAudio()
+    stream = audio_interface.open(
+        format=pyaudio.paInt16,
+        channels=1,
+        rate=16000,
+        input=True,
+        frames_per_buffer=chunk_size,
+        stream_callback=callback,
+    )
+
+    try:
+        print("Recording...")
+        audio_gen = audio_generator(buffer, chunk_size)
+        responses = get_streaming_response(audio_gen)
+
+        for response in responses:
+            for result in response.results:
+                if result.is_final:
+                    print(f"Transcript: {result.alternatives[0].transcript}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        stream.stop_stream()
+        stream.close()
+        audio_interface.terminate()
 
 @app.route('/')
 def home():
