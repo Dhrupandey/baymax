@@ -5,12 +5,17 @@ from google.cloud import speech_v1p1beta1 as speech
 import pyaudio
 import queue
 import os
-from flask_cors import CORS
 import dotenv
 from dotenv import load_dotenv
 load_dotenv()
+from flask_cors import CORS
+
+# Enable CORS for all routes
+
+
 # Create Flask app with static folder configuration
 app = Flask(__name__, static_folder='public')
+from flask_cors import CORS
 
 CORS(app, resources={r"/chat": {"origins": "https://baymax-11.netlify.app"}})
 
@@ -84,8 +89,6 @@ Example:
 
 "If you ever feel unsafe, I urge you to reach out to someone who can provide immediate support, like a friend, family member, or a professional. Your safety is very important."
 Offer Resources When Appropriate: Gently suggest external resources (such as hotlines or professional help) if needed, but ensure the tone remains supportive, not directive.'''
-
-    
 
 )
 
