@@ -70,11 +70,14 @@
         </div>
         <input type="text" id="user-message" placeholder="Type a message..." />
         <button onclick="sendMessage()">Send</button>
+        <button onclick="startListening()">🎤 Speak</button>
     </div>
 
     <script>
-        async function sendMessage() {
-            const message = document.getElementById('user-message').value;
+        async function sendMessage(message) {
+            if (!message) {
+                message = document.getElementById('user-message').value;
+            }
             if (!message) return;
 
             // Add user's message to chat
@@ -107,6 +110,28 @@
             messageDiv.textContent = message;
             chatbox.appendChild(messageDiv);
             chatbox.scrollTop = chatbox.scrollHeight; // Scroll to the latest message
+        }
+
+        function startListening() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                sendMessage(transcript);
+            };
+
+            recognition.onspeechend = function() {
+                recognition.stop();
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error', event.error);
+            };
         }
     </script>
 </body>
